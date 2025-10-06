@@ -1,4 +1,88 @@
-# DayPlanner 
+# Assignment 3: An AI-Augmented Concept
+
+## Concept Augmentation
+
+Here I have my original concept for BrontoBoard.  
+__concept:__ BrontoBoard  
+    __purpose:__ Associates set of Assignments, an overview, office hours, and a name to a class and that class to a BrontoBoard  
+    __principle:__ Each Assignment, overview, and Office Hours are associated with One Class. (Does not mean that Assignments, overviews, and office hours must be unique in every class), and each class can only belong to one BrontoBoard  
+    __state:__  
+    >   - a set of BrontoBoards with  
+            - a owner User  
+            - a Calendar  
+            - a set of Classes with  
+                - a name String  
+                - an overview String  
+                - a set of Assignments  
+                - a set of Office Hours  
+    __actions:__  
+        - __initializeBB__ (user: User, calendar: Calendar): BrontoBoard  
+            - __requires:__ A valid user and their calendar  
+            - __effects:__ Creates an empty BrontoBoard for the user  
+        - __createClass__ ( Classname: String, Overview: String): (class: Class)  
+            - __requires:__ the owner is valid and the Classname not be an empty String  
+            - __effects:__ Creates a class object assigned to the owner with the given information  
+        - __addWork__ (class: Class, workName: String, dueDate: Date): Assignment  
+            - __requires:__ owner and class are valid. workName and dueDate be not empty and dueDate be not before the current date  
+            - __effects:__  Create an Assignment under the Class of the owner with the given name and due date.  
+        -__changeWork:__ (work: Assignment, dueDate: Date):  
+            -__requires:__ A valid Assignment of a Class of the owner with a future date.  
+            -__effects:__ Modifies the Assignment to the new date  
+        -__removeWork:__ (work: Assignment)  
+            -__requires:__ A valid owner and existing Assignment  
+            -__effects:__ Removes the Assignment from its class  
+
+Here is the concept modified for the llm-feature  
+__concept:__ BrontoBoard  
+    __purpose:__ Associates set of Assignments, an overview, office hours, and a name to a class and that class to a BrontoBoard  
+    __principle:__ Each Assignment, overview, and Office Hours are associated with One Class. (Does not mean that Assignments, overviews, and office hours must be unique in every class), and each class can only belong to one BrontoBoard  
+    __state:__  
+    >   - a set of BrontoBoards with  
+            - a owner User  
+            - a Calendar  
+            - a set of Classes with  
+                - a name String  
+                - an overview String  
+                - a syllabus String  
+                - a set of Assignments  
+                - a set of Office Hours  
+    __actions:__  
+        - __initializeBB__ (user: User, calendar: Calendar): BrontoBoard  
+            - __requires:__ A valid user and their calendar  
+            - __effects:__ Creates an empty BrontoBoard for the user  
+        - __createClass__ ( Classname: String, Overview: String): (class: Class)  
+            - __requires:__ the owner is valid and the Classname not be an empty String  
+            - __effects:__ Creates a class object assigned to the owner with the given information  
+        - __addWork__ (class: Class, workName: String, dueDate: Date): Assignment  
+            - __requires:__ owner and class are valid. workName and dueDate be not empty and dueDate be not before the current date  
+            - __effects:__  Create an Assignment under the Class of the owner with the given name and due date.  
+        -__changeWork:__ (work: Assignment, dueDate: Date):  
+            -__requires:__ A valid Assignment of a Class of the owner with a future date.  
+            -__effects:__ Modifies the Assignment to the new date
+        -__removeWork:__ (work: Assignment)  
+            -__requires:__ A valid owner and existing Assignment
+            -__effects:__ Removes the Assignment from its class  
+        -__addAllWork:__(class: Class, llm: Gemini, syllabus: string)  
+            -__requires:__ An existing class in this BrontoBoard and working llm  
+            -__effects:__ gathers all important assignments dates in the syllabus and adds them as Assignments  
+        -__addSyllabus__(syllabus:string)  
+            -__requires:__ A non-empty syllabus  
+            -__effects:__ Overwrites the syllabus to the new syllabus  
+
+The main difference was the addition of the last two actions, addAllWork and addSyllabus. addSyllabus sets the stage for addAllWork by adding the syllabus to our data. addAllWork is the direct llm call to obtain all the relevant Assignment information from the syllabus.
+  
+## User Interaction
+![UI Sketches for LLM](./assets/UISketchesLLM.png)  
+The user just started their classes, and in advance, signed up for BrontoBoard. However, as the year just started, they do not want to add all their classes at once as it would be a tedious process. In this case, the user would go to the AkyloView of the class they want to add their assignments for and click on a nifty button, called Add Syllabus. With their syllabus of the class, they should be able to view most, if not all, of the important assignment dates. So when they upload the syllabus to the class, they'll see another button called "Add all assignments". If they click this, they'll be sent back to the BrontoBoard and see that the most recent assignments of the class were added, and if they take a closer look in the AkyloView, see that all the assignments were added.  
+
+
+## Implementation
+The implementation of the llm feature was done in [dayplanner.ts](dayplanner.ts) due to working over the given code. I didn't want to mess with the filenames too much since I wanted to focus primarily on the implementation of the actual feature and not worry about debugging the whole system because I didn't rename all the old code. Liekwise, the test cases are written in [dayplanner-tests.ts](dayplanner-tests.ts).
+
+## Validators
+The main validators I added to my LLM's response was to check that the name and due date of the Assignment are non empty and integer values for the due date, the due date returned corresponds to a valid date, and if the due date is not a past date. In lines 175 to 185, I check that the name is a non-empty string, and the due date month and day components are both real Integers. Starting at line 189, I run a simple checker that the given date is valid, and at line 194 check that the given date is not a past date. Also, within the prompt I make clear that no extra assignments can be obtained from thin air (no hallucinations).
+
+<!-- # DayPlanner 
 A simple day planner. This implementation focuses on the core concept of organizing activities for a single day with both manual and AI-assisted scheduling.
 
 ## Concept: DayPlanner
@@ -179,4 +263,4 @@ Try extending the DayPlanner:
 ## Resources
 
 - [Google Generative AI Documentation](https://ai.google.dev/docs)
-- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/) -->

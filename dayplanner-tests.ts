@@ -4,7 +4,7 @@
  * Demonstrates both manual scheduling and LLM-assisted scheduling
  */
 
-import { DayPlanner } from './dayplanner';
+import { BrontoBoard } from './dayplanner';
 import { GeminiLLM, Config } from './gemini-llm';
 
 /**
@@ -21,6 +21,53 @@ function loadConfig(): Config {
     }
 }
 
+
+/**
+ * Load a makeshift Syllabus
+ */
+const syllabus = `
+Welcome to my class!
+
+Here are the due dates for my assignments:
+Pset#0              9/4
+Pset#1              10/5
+Pset#2              11/6
+Pset#3              12/7
+`;
+
+const syllabus2 = `
+Technical Lectures and Laboratory Schedule:
+
+Week
+Lecture Dates
+Lecture topic
+Lab
+
+Week1
+Feb 3, Feb 5
+Introduction, architectures, ROS
+Lab1a-b: Linux, Git
+
+
+Week2
+Feb 10, 12
+Geometry, more ROS
+Lab1c: ROS
+
+3
+Feb 18, 19
+Control and kinematics
+Lab 2: wall following (simulation) 
+
+
+4
+Feb 24, 26
+Sensing
+Lab 3: wall following (racecar)
+
+The schedule of the Advanced topics and Use Cases is subject to change. Advanced Topics and Use Cases lectures will be decided depending on interest and guest lecturers.
+
+`
 /**
  * Test case 1: Manual scheduling
  * Demonstrates adding activities and manually assigning them to time slots
@@ -29,30 +76,27 @@ export async function testManualScheduling(): Promise<void> {
     console.log('\n🧪 TEST CASE 1: Manual Scheduling');
     console.log('==================================');
     
-    const planner = new DayPlanner();
-    
-    // Add some activities
-    console.log('📝 Adding activities...');
-    const breakfast = planner.addActivity('Breakfast', 1); // 30 minutes
-    const workout = planner.addActivity('Morning Workout', 2); // 1 hour
-    const study = planner.addActivity('Study Session', 3); // 1.5 hours
-    const lunch = planner.addActivity('Lunch', 1); // 30 minutes
-    const meeting = planner.addActivity('Team Meeting', 2); // 1 hour
-    const dinner = planner.addActivity('Dinner', 1); // 30 minutes
-    const reading = planner.addActivity('Evening Reading', 2); // 1 hour
-    
-    // Manually assign activities to time slots
-    console.log('⏰ Manually assigning activities...');
-    planner.assignActivity(breakfast, 14); // 7:00 AM
-    planner.assignActivity(workout, 16); // 8:00 AM
-    planner.assignActivity(study, 20); // 10:00 AM
-    planner.assignActivity(lunch, 26); // 1:00 PM
-    planner.assignActivity(meeting, 30); // 3:00 PM
-    planner.assignActivity(dinner, 38); // 7:00 PM
-    planner.assignActivity(reading, 42); // 9:00 PM
-    
-    // Display the schedule
-    planner.displaySchedule();
+    const brontoBoard = new BrontoBoard();
+    const cls = brontoBoard.createClass("Physics 101", "Hello");
+    const classId = cls.id;
+
+    const dueDate = new Date(Date.now() + 1000 * 60 * 60 * 24); // tomorrow
+    // const now = new Date();
+    // const specificDate: Date = new Date(now.getFullYear(), now.getMonth(), now.getDay() + 1, 0, 0, 0, 0);
+    const work = brontoBoard.addAssignment(classId, 'Homework 1', dueDate);
+
+    if(!(work.name === 'Homework 1' && brontoBoard.getAllAssignments(classId).length === 1)){
+        throw new Error("addAssignment did not work as intended")
+    } else{
+        console.log("\n Assignment was added");
+    }
+
+    brontoBoard.removeWork(work);
+    if(!(brontoBoard.getAllAssignments(classId).length === 0)){
+        throw new Error("addAssignment did not work as intended")
+    } else {
+        console.log("\n Assignment was successfully removed");
+    }
 }
 
 /**
@@ -63,31 +107,20 @@ export async function testLLMScheduling(): Promise<void> {
     console.log('\n🧪 TEST CASE 2: LLM-Assisted Scheduling');
     console.log('========================================');
     
-    const planner = new DayPlanner();
+    const brontoBoard = new BrontoBoard();
+    const cls = brontoBoard.createClass("Robotics: Science and Systems", "Hello");
+    const classId = cls.id;
     const config = loadConfig();
     const llm = new GeminiLLM(config);
-    
-    // Add some activities (similar to manual test but different)
-    console.log('📝 Adding activities...');
-    planner.addActivity('Morning Jog', 2); // 1 hour
-    planner.addActivity('Math Homework', 4); // 2 hours
-    planner.addActivity('Coffee Break', 1); // 30 minutes
-    planner.addActivity('History Class', 2); // 1 hour
-    planner.addActivity('Lunch with Friends', 2); // 1 hour
-    planner.addActivity('Project Work', 3); // 1.5 hours
-    planner.addActivity('Gym Session', 2); // 1 hour
-    planner.addActivity('Movie Night', 3); // 1.5 hours
-    
-    // Display initial state (all unassigned)
-    console.log('\n📋 Initial state - all activities unassigned:');
-    planner.displaySchedule();
-    
-    // Let the LLM assign all activities
-    await planner.assignActivities(llm);
-    
-    // Display the final schedule
-    console.log('\n📅 Final schedule after LLM assignment:');
-    planner.displaySchedule();
+    brontoBoard.addSyllabus(syllabus2);
+
+    brontoBoard.findAssignments(classId, llm);
+
+    const all = brontoBoard.getAllAssignments(classId);
+    if(!(brontoBoard.getAllAssignments(classId).length === 4 )){
+        // console.log(`${brontoBoard.getAllAssignments(classId).length}`)
+        throw new Error("findAssignments did not work as intended")
+    }
 }
 
 /**
@@ -98,35 +131,33 @@ export async function testMixedScheduling(): Promise<void> {
     console.log('\n🧪 TEST CASE 3: Mixed Scheduling');
     console.log('=================================');
     
-    const planner = new DayPlanner();
+    const brontoBoard = new BrontoBoard();
+    const cls = brontoBoard.createClass("Physics 101", "Hello");
+    const classId = cls.id;
     const config = loadConfig();
     const llm = new GeminiLLM(config);
+    brontoBoard.addSyllabus(syllabus);
+
+}
+
+export async function testLLMScheduling2(): Promise<void> {
+    console.log('\n🧪 TEST CASE 4: LLM-Assisted Assignment Finding');
+    console.log('========================================');
     
-    // Add activities
-    console.log('📝 Adding activities...');
-    const breakfast = planner.addActivity('Breakfast', 1);
-    const workout = planner.addActivity('Morning Workout', 2);
-    planner.addActivity('Study Session', 3);
-    planner.addActivity('Lunch', 1);
-    planner.addActivity('Team Meeting', 2);
-    planner.addActivity('Dinner', 1);
-    planner.addActivity('Evening Reading', 2);
-    
-    // Manually assign some activities
-    console.log('⏰ Manually assigning breakfast and workout...');
-    planner.assignActivity(breakfast, 14); // 7:00 AM
-    planner.assignActivity(workout, 16); // 8:00 AM
-    
-    // Display partial schedule
-    console.log('\n📅 Partial schedule after manual assignments:');
-    planner.displaySchedule();
-    
-    // Let LLM assign the remaining activities
-    await planner.assignActivities(llm);
-    
-    // Display final schedule
-    console.log('\n📅 Final schedule after LLM assignment:');
-    planner.displaySchedule();
+    const brontoBoard = new BrontoBoard();
+    const cls = brontoBoard.createClass("Physics 101", "Hello");
+    const classId = cls.id;
+    const config = loadConfig();
+    const llm = new GeminiLLM(config);
+    brontoBoard.addSyllabus(syllabus);
+
+    brontoBoard.findAssignments(classId, llm);
+
+    const all = brontoBoard.getAllAssignments(classId);
+    if(!(brontoBoard.getAllAssignments(classId).length === 3 && (all[0].name ==="Pset#1" ||all[0].name === "Pset#2"||all[0].name ===  "Pset#3"))){
+        console.log(`${brontoBoard.getAllAssignments(classId).length}`)
+        throw new Error("findAssignments did not work as intended")
+    }
 }
 
 /**
