@@ -113,10 +113,11 @@ export class BrontoBoard {
     private createAssignmentPrompt(syllabus: string): string {
         const criticalRequirements = [
             "1. ONLY ADD ASSIGNMENTS THAT ARE FOUND IN THE GIVEN TEXT WHICH WILL BE REFERRED TO AS THE SYLLABUS",
-            "3. Return ONLY the JSON object, no additional text",
-            "2. If the name of the month is found, return its corresponding number, such as 1 for January and 12 for December",
-            "2. If a certain value cannot be found, return a -1 for it",
-            "4. The due date of the Assignments returned HAVE to be after or on the current date",
+            "2. Return ONLY the JSON object, no additional text",
+            "3. If the name of the month is found, return its corresponding number, such as 1 for January and 12 for December",
+            "4. If the year is not specified, assume the current year",
+            "5. If a certain value cannot be found, return a -1 for it",
+            "6. The due date of the Assignments returned HAVE to be after or on the current date",
         ];
 
         return `
@@ -153,7 +154,12 @@ Return your response as a JSON object with this exact structure:
     private parseAndApplyAssignments(responseText: string, classid: string): void {
         try {
             // Extract JSON from response (in case there's extra text)
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            // const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            const cleaned = responseText
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .trim();
+            const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
                 throw new Error('No JSON found in response');
             }
@@ -198,6 +204,7 @@ Return your response as a JSON object with this exact structure:
                 }
 
                 if (specificDate < now) {
+                    console.log(`${specificDate.toDateString()}`)
                     issues.push(`Assignment "${name}" has a past due date.`);
                     continue;
                 }
